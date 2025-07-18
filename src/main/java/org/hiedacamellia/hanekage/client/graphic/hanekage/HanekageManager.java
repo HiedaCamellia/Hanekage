@@ -75,10 +75,10 @@ public class HanekageManager {
 
     public static void pushHanekagePath(String name, BakedGeoModel model, Matrix4f matrix4f, UUID uuid) {
         getCache(name).tracks().forEach(modelPath -> {
-            GeoBone parent = model.getBone(modelPath.last()).get();
-            GeoBone trackStartBone = parent;
+            GeoBone parentBone = model.getBone(modelPath.last()).get();
+            GeoBone trackStartBone = parentBone;
             GeoBone trackEndBone = null;
-            for (GeoBone childBone : parent.getChildBones()) {
+            for (GeoBone childBone : parentBone.getChildBones()) {
                 if (childBone.getName().endsWith("start")) {
                     trackStartBone = childBone;
                 } else if (childBone.getName().endsWith("end")) {
@@ -88,17 +88,27 @@ public class HanekageManager {
 
             Matrix4f worldMatrix = new Matrix4f(matrix4f).mul(trackStartBone.getModelSpaceMatrix());
 
-            Vector4f transform_start = trackStartBone.getLocalSpaceMatrix().transform(new Vector4f(trackStartBone.getPivotX()/16, trackStartBone.getPivotY()/16, trackStartBone.getPivotZ()/16, 1));
+            Vector4f transform = parentBone.getLocalSpaceMatrix().transform(new Vector4f(parentBone.getPivotX()/16, parentBone.getPivotY()/16, parentBone.getPivotZ()/16, 1));
 
-            Vector4f start = new Vector4f(transform_start.x(), transform_start.y(), transform_start.z(), 1).mul(worldMatrix);
+            Vector4f parent = new Vector4f(transform.x(), transform.y(), transform.z(), 1).mul(worldMatrix);
 
-            Vector4f offset = new Vector4f((trackEndBone.getPivotX()-trackStartBone.getPivotX())/16, (trackEndBone.getPivotY()-trackStartBone.getPivotY())/16, (trackEndBone.getPivotZ()-trackStartBone.getPivotZ())/16, 0)
-                    .rotateX(trackStartBone.getRotX())
-                    .rotateY(trackStartBone.getRotY())
-                    .rotateZ(trackStartBone.getRotZ())
+            Vector4f offset_start = new Vector4f((parentBone.getPivotX()-trackStartBone.getPivotX())/16, (parentBone.getPivotY()-trackStartBone.getPivotY())/16, (parentBone.getPivotZ()-trackStartBone.getPivotZ())/16, 0)
+                    .rotateX(parentBone.getRotX())
+                    .rotateY(parentBone.getRotY())
+                    .rotateZ(parentBone.getRotZ())
+                    .mul(parentBone.getScaleX(), parentBone.getScaleY(), parentBone.getScaleZ(), 1)
                     .mul(worldMatrix);
 
-            Vector4f end = new Vector4f(start).add(offset);
+            Vector4f start = new Vector4f(parent).add(offset_start);
+
+            Vector4f offset_end = new Vector4f((trackEndBone.getPivotX()-parentBone.getPivotX())/16, (trackEndBone.getPivotY()-parentBone.getPivotY())/16, (trackEndBone.getPivotZ()-parentBone.getPivotZ())/16, 0)
+                    .rotateX(parentBone.getRotX())
+                    .rotateY(parentBone.getRotY())
+                    .rotateZ(parentBone.getRotZ())
+                    .mul(parentBone.getScaleX(), parentBone.getScaleY(), parentBone.getScaleZ(), 1)
+                    .mul(worldMatrix);
+
+            Vector4f end = new Vector4f(start).add(offset_end);
 
             pushPoint(trackStartBone.getName(),uuid,
                     start,

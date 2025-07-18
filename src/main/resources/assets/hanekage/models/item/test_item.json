@@ -1,0 +1,11 @@
+{
+  "parent": "builtin/entity",
+  "credit": "Made with Blockbench",
+  "texture_size": [
+    32,
+    32
+  ],
+  "textures": {
+    "particle": "hanekage:item/test_item"
+  }
+}

@@ -1,0 +1,147 @@
+package org.hiedacamellia.hanekage.client.graphic.hanekage;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.logging.LogUtils;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import org.hiedacamellia.hanekage.client.config.json.SwordTrailConfig;
+import org.hiedacamellia.hanekage.client.graphic.render.HanekageRenderer;
+import org.hiedacamellia.hanekage.client.util.ItemUtil;
+import org.joml.*;
+import org.slf4j.Logger;
+import software.bernie.geckolib.animatable.GeoAnimatable;
+import software.bernie.geckolib.cache.object.BakedGeoModel;
+import software.bernie.geckolib.cache.object.GeoBone;
+import software.bernie.geckolib.cache.object.GeoCube;
+import software.bernie.geckolib.renderer.GeoItemRenderer;
+
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+public class HanekageManager {
+
+    private static final Logger LOGGER = LogUtils.getLogger();
+
+    private static final HashMap<String, ModelTrackCache> TRACK_CACHE = new HashMap<>();
+    private static final HashMap<String, ResourceLocation> TEX_CACHE = new HashMap<>();
+    private static final HashMap<String, List<GeoCube>> CUBE_CACHE = new HashMap<>();
+
+    public static void cacheModel(String name, BakedGeoModel model) {
+        TRACK_CACHE.put(name, ModelTrackCache.create(model));
+        cacheCubes(name, model);
+    }
+
+    public static void cacheTexture(String name, GeoItemRenderer<?> renderer, Item item) {
+
+        try {
+            // 通过反射找到 getTextureLocation 方法
+
+            Method method = renderer.getClass().getMethod("getTextureLocation", GeoAnimatable.class);
+
+            // 反射调用，返回 ResourceLocation
+            ResourceLocation texture = (ResourceLocation) method.invoke(renderer, item);
+
+            TEX_CACHE.put(name, texture);
+
+        } catch (Exception e) {
+            LOGGER.error("Failed to cache texture for item: {}", ItemUtil.toString(item), e);
+        }
+    }
+
+    private static void cacheCubes(String name, BakedGeoModel model) {
+        ModelTrackCache cache = getCache(name);
+        cache.tracks().forEach(modelPath -> {
+            GeoBone bone = model.getBone(modelPath.last()).get();
+
+            String bone_name = bone.getName();
+            List<GeoCube> cubes = bone.getCubes();
+
+            CUBE_CACHE.put(name + "-" + bone_name, cubes);
+        });
+    }
+
+    public static boolean hasCache(String name) {
+        return TRACK_CACHE.containsKey(name) || TEX_CACHE.containsKey(name);
+    }
+
+    public static ModelTrackCache getCache(String name) {
+        return TRACK_CACHE.get(name);
+    }
+
+    private static final HashMap<String, Map<UUID,HanekagePath>> PATH_CACHE = new HashMap<>();
+
+    public static void pushHanekagePath(String name, BakedGeoModel model, Matrix4f matrix4f, UUID uuid) {
+        getCache(name).tracks().forEach(modelPath -> {
+            GeoBone parent = model.getBone(modelPath.last()).get();
+            GeoBone trackStartBone = parent;
+            GeoBone trackEndBone = null;
+            for (GeoBone childBone : parent.getChildBones()) {
+                if (childBone.getName().endsWith("start")) {
+                    trackStartBone = childBone;
+                } else if (childBone.getName().endsWith("end")) {
+                    trackEndBone = childBone;
+                }
+            }
+
+            Matrix4f worldMatrix = new Matrix4f(matrix4f).mul(trackStartBone.getModelSpaceMatrix());
+
+            Vector4f transform_start = trackStartBone.getLocalSpaceMatrix().transform(new Vector4f(trackStartBone.getPivotX()/16, trackStartBone.getPivotY()/16, trackStartBone.getPivotZ()/16, 1));
+
+            Vector4f start = new Vector4f(transform_start.x(), transform_start.y(), transform_start.z(), 1).mul(worldMatrix);
+
+            Vector4f offset = new Vector4f((trackEndBone.getPivotX()-trackStartBone.getPivotX())/16, (trackEndBone.getPivotY()-trackStartBone.getPivotY())/16, (trackEndBone.getPivotZ()-trackStartBone.getPivotZ())/16, 0)
+                    .rotateX(trackStartBone.getRotX())
+                    .rotateY(trackStartBone.getRotY())
+                    .rotateZ(trackStartBone.getRotZ())
+                    .mul(worldMatrix);
+
+            Vector4f end = new Vector4f(start).add(offset);
+
+            pushPoint(trackStartBone.getName(),uuid,
+                    start,
+                    end);
+        });
+
+
+    }
+
+    private static void pushPoint(String bone_name, UUID uuid, Vector4f start, Vector4f end) {
+        if (!PATH_CACHE.containsKey(bone_name)) {
+            PATH_CACHE.put(bone_name, new HashMap<>());
+        }
+        if (!PATH_CACHE.get(bone_name).containsKey(uuid)) {
+            PATH_CACHE.get(bone_name).put(uuid, new HanekagePath(SwordTrailConfig.getTrailTime(bone_name),SwordTrailConfig.getTrailColor(bone_name)));
+        }
+
+        PATH_CACHE.get(bone_name).get(uuid).pushPoint(new Vector3f(start.x(), start.y(), start.z())
+                , new Vector3f(end.x(), end.y(), end.z()));
+
+
+    }
+
+
+    public static void renderHanekage(PoseStack poseStack) {
+        HanekageRenderer.startBatch();
+        PATH_CACHE.forEach((string, map) -> map.forEach((uuid, hanekagePath) -> HanekageRenderer.renderInBatch(poseStack,hanekagePath)));
+        HanekageRenderer.endBatch();
+
+        popPoints();
+    }
+
+    private static void popPoints() {
+        PATH_CACHE.forEach((bone_name, path) ->
+                path.forEach((uuid, hanekagePath) ->
+                        hanekagePath.popPoint()));
+        for (String bone_name : PATH_CACHE.keySet()) {
+            for (UUID uuid : PATH_CACHE.get(bone_name).keySet()) {
+                if(PATH_CACHE.get(bone_name).get(uuid).shouldRemove()){
+                    PATH_CACHE.get(bone_name).remove(uuid);
+                }
+            }
+        }
+    }
+
+}

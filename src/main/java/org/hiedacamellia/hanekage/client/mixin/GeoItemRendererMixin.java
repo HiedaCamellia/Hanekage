@@ -31,7 +31,6 @@ public abstract class GeoItemRendererMixin<T extends Item & GeoAnimatable>  {
 
     @Inject(method = "preRender(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/world/item/Item;Lsoftware/bernie/geckolib/cache/object/BakedGeoModel;Lnet/minecraft/client/renderer/MultiBufferSource;Lcom/mojang/blaze3d/vertex/VertexConsumer;ZFIII)V",at = @At("RETURN"))
     private void preRender(PoseStack poseStack, T animatable, BakedGeoModel model, @Nullable MultiBufferSource bufferSource, @Nullable VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, int colour, CallbackInfo ci) {
-        // Custom pre-render logic can be added here if needed
 
         String item = ItemUtil.toString(animatable.asItem());
 
@@ -54,7 +53,6 @@ public abstract class GeoItemRendererMixin<T extends Item & GeoAnimatable>  {
         BakedGeoModel model = geoModel.getBakedModel(geoModel.getModelResource(((GeoItemRenderer<T>) (Object) this).getAnimatable(), (GeoItemRenderer<T>)(Object)this));
 
         if(ItemDisplayContextUtil.isInMainHand(transformType) && HanekageManager.hasCache(item)){
-            //这里添加刀光路径
             HanekageManager.pushHanekagePath(item,model,matrix4f,uuid);
         }
 

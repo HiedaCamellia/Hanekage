@@ -7,17 +7,17 @@ import net.minecraft.world.item.Item;
 import org.hiedacamellia.hanekage.client.config.json.SwordTrailConfig;
 import org.hiedacamellia.hanekage.client.graphic.render.HanekageRenderer;
 import org.hiedacamellia.hanekage.client.util.ItemUtil;
-import org.joml.*;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.slf4j.Logger;
 import software.bernie.geckolib.animatable.GeoAnimatable;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.cache.object.GeoBone;
-import software.bernie.geckolib.cache.object.GeoCube;
 import software.bernie.geckolib.renderer.GeoItemRenderer;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -27,11 +27,9 @@ public class HanekageManager {
 
     private static final HashMap<String, ModelTrackCache> TRACK_CACHE = new HashMap<>();
     private static final HashMap<String, ResourceLocation> TEX_CACHE = new HashMap<>();
-    private static final HashMap<String, List<GeoCube>> CUBE_CACHE = new HashMap<>();
 
     public static void cacheModel(String name, BakedGeoModel model) {
         TRACK_CACHE.put(name, ModelTrackCache.create(model));
-        cacheCubes(name, model);
     }
 
     public static void cacheTexture(String name, GeoItemRenderer<?> renderer, Item item) {
@@ -49,18 +47,6 @@ public class HanekageManager {
         } catch (Exception e) {
             LOGGER.error("Failed to cache texture for item: {}", ItemUtil.toString(item), e);
         }
-    }
-
-    private static void cacheCubes(String name, BakedGeoModel model) {
-        ModelTrackCache cache = getCache(name);
-        cache.tracks().forEach(modelPath -> {
-            GeoBone bone = model.getBone(modelPath.last()).get();
-
-            String bone_name = bone.getName();
-            List<GeoCube> cubes = bone.getCubes();
-
-            CUBE_CACHE.put(name + "-" + bone_name, cubes);
-        });
     }
 
     public static boolean hasCache(String name) {
@@ -108,7 +94,7 @@ public class HanekageManager {
                     .mul(parentBone.getScaleX(), parentBone.getScaleY(), parentBone.getScaleZ(), 1)
                     .mul(worldMatrix);
 
-            Vector4f end = new Vector4f(start).add(offset_end);
+            Vector4f end = new Vector4f(parent).add(offset_end);
 
             pushPoint(trackStartBone.getName(),uuid,
                     start,

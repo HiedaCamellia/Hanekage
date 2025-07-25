@@ -22,6 +22,7 @@ import software.bernie.geckolib.animatable.GeoAnimatable;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.model.GeoModel;
 import software.bernie.geckolib.renderer.GeoItemRenderer;
+import software.bernie.geckolib.renderer.GeoRenderer;
 
 import java.util.UUID;
 
@@ -37,7 +38,7 @@ public abstract class GeoItemRendererMixin<T extends Item & GeoAnimatable>  {
 
         if(!HanekageManager.hasCache(item)){
             HanekageManager.cacheModel(item, model);
-            HanekageManager.cacheTexture(item,(GeoItemRenderer<T>)(Object)this,animatable);
+            HanekageManager.cacheTexture(item,(GeoRenderer<T>)(Object)this,animatable);
         }
     }
 

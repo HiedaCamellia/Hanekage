@@ -3,9 +3,11 @@ package org.hiedacamellia.hanekage.client.graphic.hanekage;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.Item;
 import org.hiedacamellia.hanekage.client.config.json.SwordTrailConfig;
 import org.hiedacamellia.hanekage.client.graphic.render.HanekageRenderer;
+import org.hiedacamellia.hanekage.client.util.EntityUtil;
 import org.hiedacamellia.hanekage.client.util.ItemUtil;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -15,6 +17,7 @@ import software.bernie.geckolib.animatable.GeoAnimatable;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.cache.object.GeoBone;
 import software.bernie.geckolib.renderer.GeoItemRenderer;
+import software.bernie.geckolib.renderer.GeoRenderer;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -32,7 +35,7 @@ public class HanekageManager {
         TRACK_CACHE.put(name, ModelTrackCache.create(model));
     }
 
-    public static void cacheTexture(String name, GeoItemRenderer<?> renderer, Item item) {
+    public static void cacheTexture(String name, GeoRenderer<?> renderer, Item item) {
 
         try {
             // 通过反射找到 getTextureLocation 方法
@@ -46,6 +49,23 @@ public class HanekageManager {
 
         } catch (Exception e) {
             LOGGER.error("Failed to cache texture for item: {}", ItemUtil.toString(item), e);
+        }
+    }
+
+    public static void cacheTexture(String name, GeoRenderer<?> renderer, Entity entity) {
+
+        try {
+            // 通过反射找到 getTextureLocation 方法
+
+            Method method = renderer.getClass().getMethod("getTextureLocation", GeoAnimatable.class);
+
+            // 反射调用，返回 ResourceLocation
+            ResourceLocation texture = (ResourceLocation) method.invoke(renderer, entity);
+
+            TEX_CACHE.put(name, texture);
+
+        } catch (Exception e) {
+            LOGGER.error("Failed to cache texture for Entity: {}", EntityUtil.toString(entity), e);
         }
     }
 

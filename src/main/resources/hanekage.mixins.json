@@ -4,9 +4,9 @@
   "package": "org.hiedacamellia.hanekage.client.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "GeoEntityRendererMixin"
   ],
   "client": [
+    "GeoEntityRendererMixin",
     "GeoItemRendererMixin"
   ],
   "injectors": {

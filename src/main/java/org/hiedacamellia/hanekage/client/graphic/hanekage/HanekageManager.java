@@ -84,15 +84,15 @@ public class HanekageManager {
             GeoBone parentBone = model.getBone(modelPath.first()).get();
             Matrix4f worldMatrix = new Matrix4f(matrix4f).mul(parentBone.getModelSpaceMatrix());
 
+
             Vector4f parent_transform = parentBone.getLocalSpaceMatrix().transform(new Vector4f(parentBone.getPivotX()/16, parentBone.getPivotY()/16, parentBone.getPivotZ()/16, 1));
             Vector4f parent = new Vector4f(parent_transform.x(), parent_transform.y(), parent_transform.z(), 1).mul(worldMatrix);
 
             for (String string : modelPath.subPath(1).path()) {
                 GeoBone geoBone = model.searchForChildBone(parentBone, string);
-                parent = new Vector4f(parent).add(getOffset(parentBone,geoBone,matrix4f));
+                parent = new Vector4f(parent).add(getOffset(parentBone,geoBone,matrix4f).mul(-1));
                 parentBone = geoBone;
             }
-            //这里应用完track父级的所有变换
 
             GeoBone trackStartBone = parentBone;
 
@@ -125,7 +125,19 @@ public class HanekageManager {
 
     private static Vector4f getOffset(GeoBone parent,GeoBone child,Matrix4f matrix4f){
         Matrix4f worldMatrix = new Matrix4f(matrix4f).mul(parent.getModelSpaceMatrix());
-
+//
+//        Vector4f parent_transform = parent.getLocalSpaceMatrix().transform(new Vector4f(parent.getPivotX()/16, parent.getPivotY()/16, parent.getPivotZ()/16, 1));
+//        Vector4f parent_pos = new Vector4f(parent_transform.x(), parent_transform.y(), parent_transform.z(), 1).mul(worldMatrix);
+//
+//        Vector4f child_transform = child.getLocalSpaceMatrix().transform(new Vector4f(child.getPivotX()/16, child.getPivotY()/16, child.getPivotZ()/16, 1));
+//        Vector4f child_pos = new Vector4f(child_transform.x(), child_transform.y(), child_transform.z(), 1).mul(worldMatrix);
+//
+//        return new Vector4f((parent_pos.x-child_pos.x), (parent_pos.y-child_pos.y), (parent_pos.z-child_pos.z), 0)
+//                .rotateX(parent.getRotX())
+//                .rotateY(parent.getRotY())
+//                .rotateZ(parent.getRotZ())
+//                .mul(parent.getScaleX(), parent.getScaleY(), parent.getScaleZ(), 1)
+//                .mul(worldMatrix);
         return new Vector4f((parent.getPivotX()-child.getPivotX())/16, (parent.getPivotY()-child.getPivotY())/16, (parent.getPivotZ()-child.getPivotZ())/16, 0)
                 .rotateX(parent.getRotX())
                 .rotateY(parent.getRotY())

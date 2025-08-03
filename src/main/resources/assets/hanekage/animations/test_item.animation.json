@@ -4,7 +4,7 @@
 		"animation.test_item.test": {
 			"animation_length": 2,
 			"bones": {
-				"bone2-track": {
+				"bone": {
 					"rotation": {
 						"0.0": {
 							"vector": [0, 0, 0]

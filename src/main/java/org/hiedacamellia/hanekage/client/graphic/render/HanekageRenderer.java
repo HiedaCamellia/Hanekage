@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.FastColor;
+import net.minecraft.util.Mth;
 import org.hiedacamellia.hanekage.client.graphic.hanekage.HanekagePath;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -47,7 +48,7 @@ public class HanekageRenderer {
         Vector3f[] ends = path.getPositionsEnd();
 
         if (path.getLength() < 2) return;
-        batchSize += path.getLength() * 6; // Each segment has 6 vertices (2 triangles)
+        batchSize += path.getLength() * 6 * 2; // Each segment has 6 vertices (2 triangles)
 
         PoseStack.Pose pose = poseStack.last();
         Matrix4f matrix = pose.pose();
@@ -57,6 +58,10 @@ public class HanekageRenderer {
         float b = FastColor.ARGB32.blue(color) / 255.0f;
 
         for (int i = 0; i < starts.length - 1; i++) {
+            if (Mth.abs(starts[i].distance(ends[i])) < 1e-6f) {
+                return;
+            }
+
             Vector3f s0 = starts[i];
             Vector3f s1 = starts[i + 1];
             Vector3f e0 = ends[i];

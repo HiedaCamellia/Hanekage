@@ -39,7 +39,15 @@ public class ModelUtil {
     }
 
     private static boolean isTrackBone(GeoBone bone) {
-        return bone.getName().endsWith("-track");
+        return bone.getName().endsWith("-track") && isValidTrackBone(bone);
+    }
+
+    private static boolean isValidTrackBone(GeoBone bone){
+        for (GeoBone childBone : bone.getChildBones()) {
+            if(childBone.getName().endsWith("-trackend"))
+                return true;
+        }
+        return false;
     }
 
 }

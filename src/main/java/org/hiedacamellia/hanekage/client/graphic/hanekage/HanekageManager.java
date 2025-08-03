@@ -5,7 +5,6 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.Item;
-import org.hiedacamellia.hanekage.Hanekage;
 import org.hiedacamellia.hanekage.client.config.json.SwordTrailConfig;
 import org.hiedacamellia.hanekage.client.graphic.render.HanekageRenderer;
 import org.hiedacamellia.hanekage.client.util.EntityUtil;
@@ -89,7 +88,7 @@ public class HanekageManager {
 
             for (String string : modelPath.subPath(1).path()) {
                 GeoBone geoBone = model.searchForChildBone(parentBone, string);
-                parent = new Vector4f(parent).add(getOffset(parentBone,geoBone,matrix4f));
+                parent = new Vector4f(parent).add(getOffset(parentBone,geoBone,matrix4f).mul(-1));
                 parentBone = geoBone;
             }
             //这里应用完track父级的所有变换

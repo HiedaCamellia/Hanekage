@@ -33,8 +33,8 @@ public class SwordTrailConfig {
             }
             Hanekage.LOGGER.info("Hanekage loaded with " + swordTrailMap.size() + " SwordTrail configs.");
         } catch (Exception e) {
-            Hanekage.LOGGER.debug("Hanekage load error: " + e.getMessage());
-            save();
+            Hanekage.LOGGER.error("Hanekage load error: " + e.getMessage());
+//            save();
         }
     }
 

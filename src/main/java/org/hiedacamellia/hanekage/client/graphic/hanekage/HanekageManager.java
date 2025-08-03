@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import software.bernie.geckolib.animatable.GeoAnimatable;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.cache.object.GeoBone;
-import software.bernie.geckolib.renderer.GeoItemRenderer;
 import software.bernie.geckolib.renderer.GeoRenderer;
 
 import java.lang.reflect.Method;
@@ -77,51 +76,101 @@ public class HanekageManager {
         return TRACK_CACHE.get(name);
     }
 
-    private static final HashMap<String, Map<UUID,HanekagePath>> PATH_CACHE = new HashMap<>();
+    private static final HashMap<String, Map<UUID, HanekagePath>> PATH_CACHE = new HashMap<>();
 
     public static void pushHanekagePath(String name, BakedGeoModel model, Matrix4f matrix4f, UUID uuid) {
         getCache(name).tracks().forEach(modelPath -> {
-            GeoBone parentBone = model.getBone(modelPath.last()).get();
+            GeoBone parentBone = model.getBone(modelPath.first()).get();
+
+            Vector4f parent_transform = parentBone.getLocalSpaceMatrix().transform(new Vector4f(parentBone.getPivotX()/16, parentBone.getPivotY()/16, parentBone.getPivotZ()/16, 1));
+
+            for (String string : modelPath.subPath(1).path()) {
+                GeoBone geoBone = model.searchForChildBone(parentBone, string);
+                parent_transform = new Vector4f(parent_transform).add(getOffset(parentBone,geoBone,matrix4f));
+                parentBone = geoBone;
+            }
+            //这里应用完track父级的所有变换
+
             GeoBone trackStartBone = parentBone;
+
             GeoBone trackEndBone = null;
             for (GeoBone childBone : parentBone.getChildBones()) {
-                if (childBone.getName().endsWith("start")) {
+                if (childBone.getName().endsWith("-trackstart")) {
                     trackStartBone = childBone;
-                } else if (childBone.getName().endsWith("end")) {
+                } else if (childBone.getName().endsWith("-trackend")) {
                     trackEndBone = childBone;
                 }
             }
+            if(trackEndBone == null){
+                LOGGER.error("Track end bone not found for track: {}, cannot render path.", modelPath);
+                return;
+            }
 
-            Matrix4f worldMatrix = new Matrix4f(matrix4f).mul(trackStartBone.getModelSpaceMatrix());
+            Vector4f offset_start = getOffset(parentBone, trackStartBone, matrix4f);
+            Vector4f start = new Vector4f(parent_transform).add(offset_start);
+            Vector4f offset_end = getOffset(parentBone, trackEndBone, matrix4f);
+            Vector4f end = new Vector4f(parent_transform).add(offset_end);
 
-            Vector4f transform = parentBone.getLocalSpaceMatrix().transform(new Vector4f(parentBone.getPivotX()/16, parentBone.getPivotY()/16, parentBone.getPivotZ()/16, 1));
-
-            Vector4f parent = new Vector4f(transform.x(), transform.y(), transform.z(), 1).mul(worldMatrix);
-
-            Vector4f offset_start = new Vector4f((parentBone.getPivotX()-trackStartBone.getPivotX())/16, (parentBone.getPivotY()-trackStartBone.getPivotY())/16, (parentBone.getPivotZ()-trackStartBone.getPivotZ())/16, 0)
-                    .rotateX(parentBone.getRotX())
-                    .rotateY(parentBone.getRotY())
-                    .rotateZ(parentBone.getRotZ())
-                    .mul(parentBone.getScaleX(), parentBone.getScaleY(), parentBone.getScaleZ(), 1)
-                    .mul(worldMatrix);
-
-            Vector4f start = new Vector4f(parent).add(offset_start);
-
-            Vector4f offset_end = new Vector4f((trackEndBone.getPivotX()-parentBone.getPivotX())/16, (trackEndBone.getPivotY()-parentBone.getPivotY())/16, (trackEndBone.getPivotZ()-parentBone.getPivotZ())/16, 0)
-                    .rotateX(parentBone.getRotX())
-                    .rotateY(parentBone.getRotY())
-                    .rotateZ(parentBone.getRotZ())
-                    .mul(parentBone.getScaleX(), parentBone.getScaleY(), parentBone.getScaleZ(), 1)
-                    .mul(worldMatrix);
-
-            Vector4f end = new Vector4f(parent).add(offset_end);
-
-            pushPoint(trackStartBone.getName(),uuid,
+            pushPoint(parentBone.getName(),uuid,
                     start,
                     end);
         });
+//
+//        getCache(name).tracks().forEach(modelPath -> {
+//            GeoBone parentBone = model.getBone(modelPath.last()).get();
+//
+//            GeoBone trackStartBone = parentBone;
+//
+//            GeoBone trackEndBone = null;
+//            for (GeoBone childBone : parentBone.getChildBones()) {
+//                if (childBone.getName().endsWith("start")) {
+//                    trackStartBone = childBone;
+//                } else if (childBone.getName().endsWith("end")) {
+//                    trackEndBone = childBone;
+//                }
+//            }
+//
+//            Matrix4f worldMatrix = new Matrix4f(matrix4f).mul(trackStartBone.getModelSpaceMatrix());
+//
+//            Vector4f transform = parentBone.getLocalSpaceMatrix().transform(new Vector4f(parentBone.getPivotX()/16, parentBone.getPivotY()/16, parentBone.getPivotZ()/16, 1));
+//
+//            Vector4f parent = new Vector4f(transform.x(), transform.y(), transform.z(), 1).mul(worldMatrix);
+//
+//            Vector4f offset_start = new Vector4f((parentBone.getPivotX()-trackStartBone.getPivotX())/16, (parentBone.getPivotY()-trackStartBone.getPivotY())/16, (parentBone.getPivotZ()-trackStartBone.getPivotZ())/16, 0)
+//                    .rotateX(parentBone.getRotX())
+//                    .rotateY(parentBone.getRotY())
+//                    .rotateZ(parentBone.getRotZ())
+//                    .mul(parentBone.getScaleX(), parentBone.getScaleY(), parentBone.getScaleZ(), 1)
+//                    .mul(worldMatrix);
+//
+//            Vector4f start = new Vector4f(parent).add(offset_start);
+//
+//            Vector4f offset_end = new Vector4f((trackEndBone.getPivotX()-parentBone.getPivotX())/16, (trackEndBone.getPivotY()-parentBone.getPivotY())/16, (trackEndBone.getPivotZ()-parentBone.getPivotZ())/16, 0)
+//                    .rotateX(parentBone.getRotX())
+//                    .rotateY(parentBone.getRotY())
+//                    .rotateZ(parentBone.getRotZ())
+//                    .mul(parentBone.getScaleX(), parentBone.getScaleY(), parentBone.getScaleZ(), 1)
+//                    .mul(worldMatrix);
+//
+//            Vector4f end = new Vector4f(parent).add(offset_end);
+//
+//            pushPoint(trackStartBone.getName(),uuid,
+//                    start,
+//                    end);
+//        });
 
 
+    }
+
+    private static Vector4f getOffset(GeoBone parent,GeoBone child,Matrix4f matrix4f){
+        Matrix4f worldMatrix = new Matrix4f(matrix4f).mul(parent.getModelSpaceMatrix());
+
+        return new Vector4f((parent.getPivotX()-child.getPivotX())/16, (parent.getPivotY()-child.getPivotY())/16, (parent.getPivotZ()-child.getPivotZ())/16, 0)
+                .rotateX(parent.getRotX())
+                .rotateY(parent.getRotY())
+                .rotateZ(parent.getRotZ())
+                .mul(parent.getScaleX(), parent.getScaleY(), parent.getScaleZ(), 1)
+                .mul(worldMatrix);
     }
 
     private static void pushPoint(String bone_name, UUID uuid, Vector4f start, Vector4f end) {

@@ -5,6 +5,7 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.Item;
+import org.hiedacamellia.hanekage.Hanekage;
 import org.hiedacamellia.hanekage.client.config.json.SwordTrailConfig;
 import org.hiedacamellia.hanekage.client.graphic.render.HanekageRenderer;
 import org.hiedacamellia.hanekage.client.util.EntityUtil;
@@ -81,12 +82,14 @@ public class HanekageManager {
     public static void pushHanekagePath(String name, BakedGeoModel model, Matrix4f matrix4f, UUID uuid) {
         getCache(name).tracks().forEach(modelPath -> {
             GeoBone parentBone = model.getBone(modelPath.first()).get();
+            Matrix4f worldMatrix = new Matrix4f(matrix4f).mul(parentBone.getModelSpaceMatrix());
 
             Vector4f parent_transform = parentBone.getLocalSpaceMatrix().transform(new Vector4f(parentBone.getPivotX()/16, parentBone.getPivotY()/16, parentBone.getPivotZ()/16, 1));
+            Vector4f parent = new Vector4f(parent_transform.x(), parent_transform.y(), parent_transform.z(), 1).mul(worldMatrix);
 
             for (String string : modelPath.subPath(1).path()) {
                 GeoBone geoBone = model.searchForChildBone(parentBone, string);
-                parent_transform = new Vector4f(parent_transform).add(getOffset(parentBone,geoBone,matrix4f));
+                parent = new Vector4f(parent).add(getOffset(parentBone,geoBone,matrix4f));
                 parentBone = geoBone;
             }
             //这里应用完track父级的所有变换
@@ -106,12 +109,10 @@ public class HanekageManager {
                 return;
             }
 
-            Vector4f offset_start = getOffset(parentBone, trackStartBone, matrix4f);
-            Vector4f start = new Vector4f(parent_transform).add(offset_start);
-            Vector4f offset_end = getOffset(parentBone, trackEndBone, matrix4f);
-            Vector4f end = new Vector4f(parent_transform).add(offset_end);
+            Vector4f start = new Vector4f(parent).add(getOffset(parentBone,trackStartBone,matrix4f));
+            Vector4f end = new Vector4f(parent).add(getOffset(parentBone,trackEndBone,matrix4f).mul(-1));
 
-            pushPoint(parentBone.getName(),uuid,
+            pushPoint(trackStartBone.getName(),uuid,
                     start,
                     end);
         });
@@ -183,8 +184,6 @@ public class HanekageManager {
 
         PATH_CACHE.get(bone_name).get(uuid).pushPoint(new Vector3f(start.x(), start.y(), start.z())
                 , new Vector3f(end.x(), end.y(), end.z()));
-
-
     }
 
 
@@ -192,7 +191,6 @@ public class HanekageManager {
         HanekageRenderer.startBatch();
         PATH_CACHE.forEach((string, map) -> map.forEach((uuid, hanekagePath) -> HanekageRenderer.renderInBatch(poseStack,hanekagePath)));
         HanekageRenderer.endBatch();
-
         popPoints();
     }
 

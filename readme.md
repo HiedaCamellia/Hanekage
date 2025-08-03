@@ -22,7 +22,8 @@
     {
       "bone_name": "bone-track",
       "trail_time": 25,
-      "color": 16711680
+      "color": 16711680,
+      "texture": "your:path/to/texture.png"
     }
   ],
   "default_trail_time":20,
@@ -31,3 +32,4 @@
 ```
 `trail_time`是记录刀刃的总帧数（目前是这样）  
 `color`是刀光的颜色，这里的`16711680`转成十六进制就是`#FF0000`，也就是红色。
+`texture`是刀光的纹理路径，是可选项

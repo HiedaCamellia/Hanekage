@@ -89,7 +89,7 @@ public class HanekageManager {
 
             for (String string : modelPath.subPath(1).path()) {
                 GeoBone geoBone = model.searchForChildBone(parentBone, string);
-                parent = new Vector4f(parent).add(getOffset(parentBone,geoBone,matrix4f).mul(-1));
+                parent = new Vector4f(parent).add(getOffset(parentBone,geoBone,matrix4f));
                 parentBone = geoBone;
             }
             //这里应用完track父级的所有变换

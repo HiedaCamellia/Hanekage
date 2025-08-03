@@ -11,6 +11,7 @@ import org.hiedacamellia.hanekage.client.graphic.render.TextureHanekageRenderer;
 import org.hiedacamellia.hanekage.client.util.EntityUtil;
 import org.hiedacamellia.hanekage.client.util.ItemUtil;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.slf4j.Logger;
@@ -139,9 +140,9 @@ public class HanekageManager {
 //                .mul(parent.getScaleX(), parent.getScaleY(), parent.getScaleZ(), 1)
 //                .mul(worldMatrix);
         return new Vector4f((parent.getPivotX()-child.getPivotX())/16, (parent.getPivotY()-child.getPivotY())/16, (parent.getPivotZ()-child.getPivotZ())/16, 0)
-                .rotateX(parent.getRotX())
-                .rotateY(parent.getRotY())
                 .rotateZ(parent.getRotZ())
+                .rotateY(parent.getRotY())
+                .rotateX(parent.getRotX())
                 .mul(parent.getScaleX(), parent.getScaleY(), parent.getScaleZ(), 1)
                 .mul(worldMatrix);
     }

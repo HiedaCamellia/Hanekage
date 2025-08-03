@@ -22,6 +22,12 @@ public class HanekageClientCommand {
                             return 1;
                         }
                 ))
+                .then(Commands.literal("save").executes(
+                        context -> {
+                            SwordTrailConfig.save();
+                            return 1;
+                        }
+                ))
         ));
     }
 

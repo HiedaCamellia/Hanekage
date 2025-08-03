@@ -7,6 +7,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.Item;
 import org.hiedacamellia.hanekage.client.config.json.SwordTrailConfig;
 import org.hiedacamellia.hanekage.client.graphic.render.HanekageRenderer;
+import org.hiedacamellia.hanekage.client.graphic.render.TextureHanekageRenderer;
 import org.hiedacamellia.hanekage.client.util.EntityUtil;
 import org.hiedacamellia.hanekage.client.util.ItemUtil;
 import org.joml.Matrix4f;
@@ -52,7 +53,6 @@ public class HanekageManager {
     }
 
     public static void cacheTexture(String name, GeoRenderer<?> renderer, Entity entity) {
-
         try {
             // 通过反射找到 getTextureLocation 方法
 
@@ -77,6 +77,7 @@ public class HanekageManager {
     }
 
     private static final HashMap<String, Map<UUID, HanekagePath>> PATH_CACHE = new HashMap<>();
+    private static final HashMap<String, Map<UUID, HanekagePath>> TEXTURE_PATH_CACHE = new HashMap<>();
 
     public static void pushHanekagePath(String name, BakedGeoModel model, Matrix4f matrix4f, UUID uuid) {
         getCache(name).tracks().forEach(modelPath -> {
@@ -111,53 +112,13 @@ public class HanekageManager {
             Vector4f start = new Vector4f(parent).add(getOffset(parentBone,trackStartBone,matrix4f));
             Vector4f end = new Vector4f(parent).add(getOffset(parentBone,trackEndBone,matrix4f).mul(-1));
 
-            pushPoint(trackStartBone.getName(),uuid,
-                    start,
-                    end);
+            if(SwordTrailConfig.hasTrailTexture(parentBone.getName())){
+                pushTexturePoint(parentBone.getName(), uuid, start, end);
+            }else {
+                pushPoint(parentBone.getName(),uuid, start, end);
+            }
+
         });
-//
-//        getCache(name).tracks().forEach(modelPath -> {
-//            GeoBone parentBone = model.getBone(modelPath.last()).get();
-//
-//            GeoBone trackStartBone = parentBone;
-//
-//            GeoBone trackEndBone = null;
-//            for (GeoBone childBone : parentBone.getChildBones()) {
-//                if (childBone.getName().endsWith("start")) {
-//                    trackStartBone = childBone;
-//                } else if (childBone.getName().endsWith("end")) {
-//                    trackEndBone = childBone;
-//                }
-//            }
-//
-//            Matrix4f worldMatrix = new Matrix4f(matrix4f).mul(trackStartBone.getModelSpaceMatrix());
-//
-//            Vector4f transform = parentBone.getLocalSpaceMatrix().transform(new Vector4f(parentBone.getPivotX()/16, parentBone.getPivotY()/16, parentBone.getPivotZ()/16, 1));
-//
-//            Vector4f parent = new Vector4f(transform.x(), transform.y(), transform.z(), 1).mul(worldMatrix);
-//
-//            Vector4f offset_start = new Vector4f((parentBone.getPivotX()-trackStartBone.getPivotX())/16, (parentBone.getPivotY()-trackStartBone.getPivotY())/16, (parentBone.getPivotZ()-trackStartBone.getPivotZ())/16, 0)
-//                    .rotateX(parentBone.getRotX())
-//                    .rotateY(parentBone.getRotY())
-//                    .rotateZ(parentBone.getRotZ())
-//                    .mul(parentBone.getScaleX(), parentBone.getScaleY(), parentBone.getScaleZ(), 1)
-//                    .mul(worldMatrix);
-//
-//            Vector4f start = new Vector4f(parent).add(offset_start);
-//
-//            Vector4f offset_end = new Vector4f((trackEndBone.getPivotX()-parentBone.getPivotX())/16, (trackEndBone.getPivotY()-parentBone.getPivotY())/16, (trackEndBone.getPivotZ()-parentBone.getPivotZ())/16, 0)
-//                    .rotateX(parentBone.getRotX())
-//                    .rotateY(parentBone.getRotY())
-//                    .rotateZ(parentBone.getRotZ())
-//                    .mul(parentBone.getScaleX(), parentBone.getScaleY(), parentBone.getScaleZ(), 1)
-//                    .mul(worldMatrix);
-//
-//            Vector4f end = new Vector4f(parent).add(offset_end);
-//
-//            pushPoint(trackStartBone.getName(),uuid,
-//                    start,
-//                    end);
-//        });
 
 
     }
@@ -173,6 +134,17 @@ public class HanekageManager {
                 .mul(worldMatrix);
     }
 
+    private static void pushTexturePoint(String bone_name, UUID uuid, Vector4f start, Vector4f end) {
+        if (!TEXTURE_PATH_CACHE.containsKey(bone_name)) {
+            TEXTURE_PATH_CACHE.put(bone_name, new HashMap<>());
+        }
+        if (!TEXTURE_PATH_CACHE.get(bone_name).containsKey(uuid)) {
+            TEXTURE_PATH_CACHE.get(bone_name).put(uuid, new HanekagePath(SwordTrailConfig.getTrailTime(bone_name),SwordTrailConfig.getTrailColor(bone_name)));
+        }
+
+        TEXTURE_PATH_CACHE.get(bone_name).get(uuid).pushPoint(new Vector3f(start.x(), start.y(), start.z())
+                , new Vector3f(end.x(), end.y(), end.z()));
+    }
     private static void pushPoint(String bone_name, UUID uuid, Vector4f start, Vector4f end) {
         if (!PATH_CACHE.containsKey(bone_name)) {
             PATH_CACHE.put(bone_name, new HashMap<>());
@@ -190,6 +162,10 @@ public class HanekageManager {
         HanekageRenderer.startBatch();
         PATH_CACHE.forEach((string, map) -> map.forEach((uuid, hanekagePath) -> HanekageRenderer.renderInBatch(poseStack,hanekagePath)));
         HanekageRenderer.endBatch();
+        TEXTURE_PATH_CACHE.forEach((string, map) -> {
+            ResourceLocation texture = SwordTrailConfig.getTrailTexture(string);
+            map.forEach((uuid, hanekagePath) -> TextureHanekageRenderer.render(poseStack, hanekagePath,texture));
+        });
         popPoints();
     }
 

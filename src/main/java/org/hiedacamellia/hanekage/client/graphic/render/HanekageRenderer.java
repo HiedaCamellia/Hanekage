@@ -48,7 +48,6 @@ public class HanekageRenderer {
         Vector3f[] ends = path.getPositionsEnd();
 
         if (path.getLength() < 2) return;
-        batchSize += path.getLength() * 6 * 2; // Each segment has 6 vertices (2 triangles)
 
         PoseStack.Pose pose = poseStack.last();
         Matrix4f matrix = pose.pose();
@@ -79,6 +78,9 @@ public class HanekageRenderer {
             builder.addVertex(matrix, e0.x, e0.y, e0.z).setColor(r, g, b, alpha);
             builder.addVertex(matrix, e1.x, e1.y, e1.z).setColor(r, g, b, alpha2);
             builder.addVertex(matrix, s1.x, s1.y, s1.z).setColor(r, g, b, alpha2);
+
+
+            batchSize += 6 * 2; // Each segment has 6 vertices (2 triangles)
         }
 
     }

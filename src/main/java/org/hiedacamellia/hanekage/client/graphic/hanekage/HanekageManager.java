@@ -37,7 +37,6 @@ public class HanekageManager {
     }
 
     public static void cacheTexture(String name, GeoRenderer<?> renderer, Item item) {
-
         try {
             // 通过反射找到 getTextureLocation 方法
 
@@ -91,6 +90,12 @@ public class HanekageManager {
 
             for (String string : modelPath.subPath(1).path()) {
                 GeoBone geoBone = model.searchForChildBone(parentBone, string);
+                if(geoBone == null) {
+                    LOGGER.error("Bone {} not found in model {}, cannot render path.", string, modelPath);
+                    return;
+                }
+
+
                 parent = new Vector4f(parent).add(getOffset(parentBone,geoBone,matrix4f).mul(-1));
                 parentBone = geoBone;
             }

@@ -97,7 +97,7 @@ public class HanekageManager {
                 }
 
 
-                parent = new Vector4f(parent).add(getOffset(parentBone,geoBone,matrix4f,normal).mul(-1));
+                parent = new Vector4f(parent).add(getOffset(parentBone,geoBone,matrix4f).mul(-1));
                 parentBone = geoBone;
             }
 
@@ -116,8 +116,8 @@ public class HanekageManager {
                 return;
             }
 
-            Vector4f start = new Vector4f(parent).add(getOffset(parentBone,trackStartBone,matrix4f,normal));
-            Vector4f end = new Vector4f(parent).add(getOffset(parentBone,trackEndBone,matrix4f,normal).mul(-1));
+            Vector4f start = new Vector4f(parent).add(getOffset(parentBone,trackStartBone,matrix4f));
+            Vector4f end = new Vector4f(parent).add(getOffset(parentBone,trackEndBone,matrix4f).mul(-1));
 
             if(SwordTrailConfig.hasTrailTexture(parentBone.getName())){
                 pushTexturePoint(parentBone.getName(), uuid, start, end);
@@ -130,7 +130,7 @@ public class HanekageManager {
 
     }
 
-    private static Vector4f getOffset(GeoBone parent,GeoBone child,Matrix4f matrix4f,Vector3f normal){
+    private static Vector4f getOffset(GeoBone parent,GeoBone child,Matrix4f matrix4f){
         Matrix4f worldMatrix = new Matrix4f(matrix4f).mul(parent.getModelSpaceMatrix());
         Quaternionf rotation = new Quaternionf().identity()
                 .rotateZ(parent.getRotZ())
@@ -142,12 +142,12 @@ public class HanekageManager {
         // 将平移向量旋转
         rotation.transform(translate);
 
-        // 平移向量变换到世界空间
-        Vector4f worldOffset = worldMatrix.transform(new Vector4f(translate, 1.0f));
+        Vector4f vector4f = new Vector4f(translate, 0.0f);
+//        vector4f = vector4f.rotate(rotation);
+        vector4f.mul(parent.getScaleX(), parent.getScaleY(), parent.getScaleZ(), 1.0f); // 应用缩放
+        vector4f.mul(worldMatrix); // 应用世界矩阵
+        return vector4f;
 
-        normal.set(worldOffset.x, worldOffset.y, worldOffset.z); // 更新法线向量
-
-        return worldOffset;
     }
 
     private static void pushTexturePoint(String bone_name, UUID uuid, Vector4f start, Vector4f end) {

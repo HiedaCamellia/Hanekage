@@ -87,6 +87,7 @@ public class HanekageManager {
 
             Vector4f parent_transform = parentBone.getLocalSpaceMatrix().transform(new Vector4f(parentBone.getPivotX()/16, parentBone.getPivotY()/16, parentBone.getPivotZ()/16, 1));
             Vector4f parent = new Vector4f(parent_transform.x(), parent_transform.y(), parent_transform.z(), 1).mul(worldMatrix);
+            Vector3f normal = new Vector3f(1, 0, 0); // 默认法线向量，后续可以根据需要调整
 
             for (String string : modelPath.subPath(1).path()) {
                 GeoBone geoBone = model.searchForChildBone(parentBone, string);
@@ -96,7 +97,7 @@ public class HanekageManager {
                 }
 
 
-                parent = new Vector4f(parent).add(getOffset(parentBone,geoBone,matrix4f).mul(-1));
+                parent = new Vector4f(parent).add(getOffset(parentBone,geoBone,matrix4f,normal).mul(-1));
                 parentBone = geoBone;
             }
 
@@ -115,8 +116,8 @@ public class HanekageManager {
                 return;
             }
 
-            Vector4f start = new Vector4f(parent).add(getOffset(parentBone,trackStartBone,matrix4f));
-            Vector4f end = new Vector4f(parent).add(getOffset(parentBone,trackEndBone,matrix4f).mul(-1));
+            Vector4f start = new Vector4f(parent).add(getOffset(parentBone,trackStartBone,matrix4f,normal));
+            Vector4f end = new Vector4f(parent).add(getOffset(parentBone,trackEndBone,matrix4f,normal).mul(-1));
 
             if(SwordTrailConfig.hasTrailTexture(parentBone.getName())){
                 pushTexturePoint(parentBone.getName(), uuid, start, end);
@@ -129,27 +130,24 @@ public class HanekageManager {
 
     }
 
-    private static Vector4f getOffset(GeoBone parent,GeoBone child,Matrix4f matrix4f){
+    private static Vector4f getOffset(GeoBone parent,GeoBone child,Matrix4f matrix4f,Vector3f normal){
         Matrix4f worldMatrix = new Matrix4f(matrix4f).mul(parent.getModelSpaceMatrix());
-//
-//        Vector4f parent_transform = parent.getLocalSpaceMatrix().transform(new Vector4f(parent.getPivotX()/16, parent.getPivotY()/16, parent.getPivotZ()/16, 1));
-//        Vector4f parent_pos = new Vector4f(parent_transform.x(), parent_transform.y(), parent_transform.z(), 1).mul(worldMatrix);
-//
-//        Vector4f child_transform = child.getLocalSpaceMatrix().transform(new Vector4f(child.getPivotX()/16, child.getPivotY()/16, child.getPivotZ()/16, 1));
-//        Vector4f child_pos = new Vector4f(child_transform.x(), child_transform.y(), child_transform.z(), 1).mul(worldMatrix);
-//
-//        return new Vector4f((parent_pos.x-child_pos.x), (parent_pos.y-child_pos.y), (parent_pos.z-child_pos.z), 0)
-//                .rotateX(parent.getRotX())
-//                .rotateY(parent.getRotY())
-//                .rotateZ(parent.getRotZ())
-//                .mul(parent.getScaleX(), parent.getScaleY(), parent.getScaleZ(), 1)
-//                .mul(worldMatrix);
-        return new Vector4f((parent.getPivotX()-child.getPivotX())/16, (parent.getPivotY()-child.getPivotY())/16, (parent.getPivotZ()-child.getPivotZ())/16, 0)
+        Quaternionf rotation = new Quaternionf().identity()
                 .rotateZ(parent.getRotZ())
                 .rotateY(parent.getRotY())
-                .rotateX(parent.getRotX())
-                .mul(parent.getScaleX(), parent.getScaleY(), parent.getScaleZ(), 1)
-                .mul(worldMatrix);
+                .rotateX(parent.getRotX());
+
+        Vector3f translate = new Vector3f((parent.getPivotX()-child.getPivotX())/16, (parent.getPivotY()-child.getPivotY())/16, (parent.getPivotZ()-child.getPivotZ())/16);
+
+        // 将平移向量旋转
+        rotation.transform(translate);
+
+        // 平移向量变换到世界空间
+        Vector4f worldOffset = worldMatrix.transform(new Vector4f(translate, 1.0f));
+
+        normal.set(worldOffset.x, worldOffset.y, worldOffset.z); // 更新法线向量
+
+        return worldOffset;
     }
 
     private static void pushTexturePoint(String bone_name, UUID uuid, Vector4f start, Vector4f end) {

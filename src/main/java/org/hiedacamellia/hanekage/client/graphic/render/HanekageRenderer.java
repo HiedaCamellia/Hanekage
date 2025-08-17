@@ -48,8 +48,16 @@ public class HanekageRenderer {
         Vector3f[] starts = path.getPositionsStart();
         Vector3f[] ends = path.getPositionsEnd();
 
-        Vector3f[] startsInterpolated = InterpolationUtils.catmullRomPoints(starts, 3);
-        Vector3f[] endsInterpolated = InterpolationUtils.catmullRomPoints(ends, 3);
+        Vector3f[] startsInterpolated = switch (path.getInterpolationType()){
+            case "lerp" -> InterpolationUtils.lerpPoints(starts, path.getInterpolationSteps());
+            case "catmullrom" -> InterpolationUtils.catmullRomPoints(starts, path.getInterpolationSteps());
+            default -> starts;
+        };
+        Vector3f[] endsInterpolated = switch (path.getInterpolationType()){
+            case "lerp" -> InterpolationUtils.lerpPoints(ends, path.getInterpolationSteps());
+            case "catmullrom" -> InterpolationUtils.catmullRomPoints(ends, path.getInterpolationSteps());
+            default -> ends;
+        };
 
         if (path.getLength() < 2) return;
 
@@ -62,7 +70,7 @@ public class HanekageRenderer {
 
         for (int i = 0; i < startsInterpolated.length - 1; i++) {
             if (Mth.abs(startsInterpolated[i].distance(endsInterpolated[i])) < 1e-6f) {
-                return;
+                continue;
             }
 
             Vector3f s0 = startsInterpolated[i];

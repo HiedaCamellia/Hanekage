@@ -23,13 +23,21 @@
       "bone_name": "bone-track",
       "trail_time": 25,
       "color": 16711680,
-      "texture": "your:path/to/texture.png"
+      "texture": "your:path/to/texture.png",
+      "interpolation": {
+        "type": "catmullrom",
+        "steps": 3
+      }
     }
   ],
   "default_trail_time":20,
-  "default_trail_color":16777215
+  "default_trail_color":16777215,
+  "default_trail_interpolation_type": "lerp",
+  "default_trail_interpolation_steps": 3
 }
 ```
 `trail_time`是记录刀刃的总帧数（目前是这样）  
 `color`是刀光的颜色，这里的`16711680`转成十六进制就是`#FF0000`，也就是红色。  
 `texture`是刀光的纹理路径，是可选项
+`interpolation`是插值方式，目前支持`lerp`和`catmullrom`，分别是线性插值和Catmull-Rom插值。
+`steps`是插值的细分程度，数值越大越平滑，但也更耗性能。

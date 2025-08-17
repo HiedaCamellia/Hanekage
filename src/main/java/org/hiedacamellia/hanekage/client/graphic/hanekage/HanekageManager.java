@@ -5,6 +5,7 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.Item;
+import org.hiedacamellia.hanekage.client.config.json.Interpolation;
 import org.hiedacamellia.hanekage.client.config.json.SwordTrailConfig;
 import org.hiedacamellia.hanekage.client.graphic.render.HanekageRenderer;
 import org.hiedacamellia.hanekage.client.graphic.render.TextureHanekageRenderer;
@@ -154,7 +155,9 @@ public class HanekageManager {
             TEXTURE_PATH_CACHE.put(bone_name, new HashMap<>());
         }
         if (!TEXTURE_PATH_CACHE.get(bone_name).containsKey(uuid)) {
-            TEXTURE_PATH_CACHE.get(bone_name).put(uuid, new HanekagePath(SwordTrailConfig.getTrailTime(bone_name),SwordTrailConfig.getTrailColor(bone_name)));
+            Interpolation trailInterpolation = SwordTrailConfig.getTrailInterpolation(bone_name);
+            TEXTURE_PATH_CACHE.get(bone_name).put(uuid,
+                    new HanekagePath(SwordTrailConfig.getTrailTime(bone_name),SwordTrailConfig.getTrailColor(bone_name),trailInterpolation.type(),trailInterpolation.steps()));
         }
 
         TEXTURE_PATH_CACHE.get(bone_name).get(uuid).pushPoint(new Vector3f(start.x(), start.y(), start.z())
@@ -165,7 +168,9 @@ public class HanekageManager {
             PATH_CACHE.put(bone_name, new HashMap<>());
         }
         if (!PATH_CACHE.get(bone_name).containsKey(uuid)) {
-            PATH_CACHE.get(bone_name).put(uuid, new HanekagePath(SwordTrailConfig.getTrailTime(bone_name),SwordTrailConfig.getTrailColor(bone_name)));
+            Interpolation trailInterpolation = SwordTrailConfig.getTrailInterpolation(bone_name);
+            PATH_CACHE.get(bone_name).put(uuid,
+                    new HanekagePath(SwordTrailConfig.getTrailTime(bone_name),SwordTrailConfig.getTrailColor(bone_name),trailInterpolation.type(),trailInterpolation.steps()));
         }
 
         PATH_CACHE.get(bone_name).get(uuid).pushPoint(new Vector3f(start.x(), start.y(), start.z())

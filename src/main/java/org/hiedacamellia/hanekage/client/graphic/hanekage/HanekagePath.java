@@ -9,10 +9,14 @@ public class HanekagePath {
     private final int maxLength;
     private final int color;
     private boolean shouldpop = false;
+    private final String interpolationType;
+    private final int interpolationSteps;
 
-    public HanekagePath(int maxLength, int color) {
+    public HanekagePath(int maxLength, int color, String interpolationType, int interpolationSteps) {
         this.maxLength = maxLength;
         this.color = color;
+        this.interpolationType = interpolationType;
+        this.interpolationSteps = interpolationSteps;
         this.length = 0;
         this.positions_start = new Vector3f[maxLength];
         this.positions_end = new Vector3f[maxLength];
@@ -65,4 +69,11 @@ public class HanekagePath {
         return color;
     }
 
+    public String getInterpolationType() {
+        return interpolationType;
+    }
+
+    public int getInterpolationSteps() {
+        return interpolationSteps;
+    }
 }

@@ -86,7 +86,6 @@ public class HanekageManager {
 
             Vector4f parent_transform = parentBone.getLocalSpaceMatrix().transform(new Vector4f(parentBone.getPivotX()/16, parentBone.getPivotY()/16, parentBone.getPivotZ()/16, 1));
             Vector4f parent = new Vector4f(parent_transform.x(), parent_transform.y(), parent_transform.z(), 1).mul(worldMatrix);
-            Vector3f normal = new Vector3f(1, 0, 0); // 默认法线向量，后续可以根据需要调整
 
             for (String string : modelPath.subPath(1).path()) {
                 GeoBone geoBone = model.searchForChildBone(parentBone, string);

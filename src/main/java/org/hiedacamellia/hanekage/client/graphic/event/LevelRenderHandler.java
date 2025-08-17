@@ -10,7 +10,7 @@ import org.hiedacamellia.hanekage.client.graphic.hanekage.HanekageManager;
 public class LevelRenderHandler {
     @SubscribeEvent
     public static void onRenderLevel(RenderLevelStageEvent event){
-        if(event.getStage() == RenderLevelStageEvent.Stage.AFTER_ENTITIES){
+        if(event.getStage() == RenderLevelStageEvent.Stage.AFTER_WEATHER){
 
             HanekageManager.renderHanekage(event.getPoseStack());
         }

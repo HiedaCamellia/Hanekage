@@ -6,6 +6,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import org.hiedacamellia.hanekage.client.graphic.hanekage.HanekagePath;
+import org.hiedacamellia.hanekage.client.graphic.util.InterpolationUtils;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -47,6 +48,9 @@ public class HanekageRenderer {
         Vector3f[] starts = path.getPositionsStart();
         Vector3f[] ends = path.getPositionsEnd();
 
+        Vector3f[] startsInterpolated = InterpolationUtils.catmullRomPoints(starts, 3);
+        Vector3f[] endsInterpolated = InterpolationUtils.catmullRomPoints(ends, 3);
+
         if (path.getLength() < 2) return;
 
         PoseStack.Pose pose = poseStack.last();
@@ -56,18 +60,18 @@ public class HanekageRenderer {
         float g = FastColor.ARGB32.green(color) / 255.0f;
         float b = FastColor.ARGB32.blue(color) / 255.0f;
 
-        for (int i = 0; i < starts.length - 1; i++) {
-            if (Mth.abs(starts[i].distance(ends[i])) < 1e-6f) {
+        for (int i = 0; i < startsInterpolated.length - 1; i++) {
+            if (Mth.abs(startsInterpolated[i].distance(endsInterpolated[i])) < 1e-6f) {
                 return;
             }
 
-            Vector3f s0 = starts[i];
-            Vector3f s1 = starts[i + 1];
-            Vector3f e0 = ends[i];
-            Vector3f e1 = ends[i + 1];
+            Vector3f s0 = startsInterpolated[i];
+            Vector3f s1 = startsInterpolated[i + 1];
+            Vector3f e0 = endsInterpolated[i];
+            Vector3f e1 = endsInterpolated[i + 1];
 
-            float alpha = ((float) i / starts.length);
-            float alpha2 = ((float) (i + 1) / starts.length);
+            float alpha = ((float) i / startsInterpolated.length);
+            float alpha2 = ((float) (i + 1) / startsInterpolated.length);
 
             builder.addVertex(matrix, s0.x, s0.y, s0.z).setColor(r, g, b, alpha);
             builder.addVertex(matrix, s1.x, s1.y, s1.z).setColor(r, g, b, alpha2);

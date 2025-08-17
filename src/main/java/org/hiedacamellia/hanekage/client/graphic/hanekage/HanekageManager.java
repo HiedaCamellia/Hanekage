@@ -80,6 +80,11 @@ public class HanekageManager {
     private static final HashMap<String, Map<UUID, HanekagePath>> PATH_CACHE = new HashMap<>();
     private static final HashMap<String, Map<UUID, HanekagePath>> TEXTURE_PATH_CACHE = new HashMap<>();
 
+    public static void reset(){
+        PATH_CACHE.clear();
+        TEXTURE_PATH_CACHE.clear();
+    }
+
     public static void pushHanekagePath(String name, BakedGeoModel model, Matrix4f matrix4f, UUID uuid) {
         getCache(name).tracks().forEach(modelPath -> {
             GeoBone parentBone = model.getBone(modelPath.first()).get();

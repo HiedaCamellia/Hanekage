@@ -8,6 +8,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import org.hiedacamellia.hanekage.Hanekage;
 import org.hiedacamellia.hanekage.client.config.json.SwordTrailConfig;
+import org.hiedacamellia.hanekage.client.graphic.hanekage.HanekageManager;
 
 @EventBusSubscriber(Dist.CLIENT)
 public class HanekageClientCommand {
@@ -19,6 +20,7 @@ public class HanekageClientCommand {
                 .then(Commands.literal("reload").executes(
                         context -> {
                             SwordTrailConfig.reload();
+                            HanekageManager.reset();
                             return 1;
                         }
                 ))

@@ -37,7 +37,7 @@ public class TextureHanekageRenderer {
 
         for (int i = 0; i < starts.length - 1; i++) {
             if (Mth.abs(starts[i].distance(ends[i]))<1e-6f) {
-                return;
+                continue;
             }
 
             Vector3f s0 = starts[i];

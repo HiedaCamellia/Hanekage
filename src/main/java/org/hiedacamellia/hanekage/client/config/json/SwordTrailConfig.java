@@ -14,6 +14,8 @@ public class SwordTrailConfig {
     private static final Map<String, SwordTrail> swordTrailMap = new HashMap<>();
     private static int defaultTrailTime = 20;
     private static int defaultTrailColor = 0xFFFFFF;
+    private static String defaultTrailInterpolationType = "lerp";
+    private static int defaultTrailInterpolationSteps = 3;
 
     public static void load(){
         JsonObject swordTrail = HanekageJsonHelper.get("config");
@@ -23,6 +25,12 @@ public class SwordTrailConfig {
             }
             if(swordTrail.has("default_trail_time")) {
                 defaultTrailTime = swordTrail.get("default_trail_time").getAsInt();
+            }
+            if(swordTrail.has("default_trail_interpolation_type")) {
+                defaultTrailInterpolationType = swordTrail.get("default_trail_interpolation_type").getAsString();
+            }
+            if(swordTrail.has("default_trail_interpolation_steps")) {
+                defaultTrailInterpolationSteps = swordTrail.get("default_trail_interpolation_steps").getAsInt();
             }
             JsonArray asJsonArray = swordTrail.get("sword_trail").getAsJsonArray();
             for (int i = 0; i < asJsonArray.size(); i++) {
@@ -63,6 +71,26 @@ public class SwordTrailConfig {
         return swordTrail != null && swordTrail.hasTexture(); // Check if the trail has a texture
     }
 
+    public static Interpolation getTrailInterpolation(String bone_name) {
+        SwordTrail swordTrail = swordTrailMap.get(bone_name);
+        if (swordTrail != null) {
+            return swordTrail.interpolation();
+        }
+        return getDefaultInterpolation(); // Return default interpolation if not found
+    }
+
+    public static Interpolation getDefaultInterpolation() {
+        return new Interpolation(defaultTrailInterpolationType,defaultTrailInterpolationSteps);
+    }
+
+    public static String getDefaultInterpolationType() {
+        return defaultTrailInterpolationType;
+    }
+
+    public static int getDefaultInterpolationSteps() {
+        return defaultTrailInterpolationSteps;
+    }
+
     public static int getDefaultTrailTime() {
         return defaultTrailTime;
     }
@@ -83,6 +111,8 @@ public class SwordTrailConfig {
         object.add("sword_trail", jsonElements);
         object.addProperty("default_trail_time", defaultTrailTime);
         object.addProperty("default_trail_color", defaultTrailColor);
+        object.addProperty("default_trail_interpolation_type", defaultTrailInterpolationType);
+        object.addProperty("default_trail_interpolation_steps", defaultTrailInterpolationSteps);
         HanekageJsonHelper.save("config",object );
     }
 

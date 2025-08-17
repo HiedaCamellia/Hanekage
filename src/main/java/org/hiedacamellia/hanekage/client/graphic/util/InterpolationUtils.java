@@ -54,6 +54,18 @@ public class InterpolationUtils {
         return result;
     }
 
+    public static Vector3f[] lerpPoints(Vector3f[] points, int steps) {
+        List<Vector3f> result = new ArrayList<>();
+        for (int i = 0; i < points.length - 1; i++) {
+            Vector3f p0 = points[i];
+            Vector3f p1 = points[i + 1];
+            for (int j = 0; j <= steps; j++) {
+                float t = (float) j / steps;
+                result.add(lerp(p0, p1, t));
+            }
+        }
+        return result.toArray(new Vector3f[0]);
+    }
     // 对一组点进行 Catmull-Rom 插值
     public static List<Vector3f> catmullRomPoints(List<Vector3f> points, int steps) {
         List<Vector3f> result = new ArrayList<>();

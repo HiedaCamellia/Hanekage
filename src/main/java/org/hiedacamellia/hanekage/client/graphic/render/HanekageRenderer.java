@@ -61,8 +61,8 @@ public class HanekageRenderer {
 
         if (path.getLength() < 2) return;
 
-        PoseStack.Pose pose = poseStack.last();
-        Matrix4f matrix = pose.pose();
+        Matrix4f matrix = poseStack.last().pose();
+        matrix.mul(RenderSystem.getProjectionMatrix().invert());
         int color = path.getColor();
         float r = FastColor.ARGB32.red(color) / 255.0f;
         float g = FastColor.ARGB32.green(color) / 255.0f;

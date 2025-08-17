@@ -1,5 +1,6 @@
 package org.hiedacamellia.hanekage.client.graphic.hanekage;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
@@ -90,6 +91,9 @@ public class HanekageManager {
             GeoBone parentBone = model.getBone(modelPath.first()).get();
             Matrix4f worldMatrix = new Matrix4f(matrix4f).mul(parentBone.getModelSpaceMatrix());
 
+            Matrix4f projectionMatrix = RenderSystem.getProjectionMatrix();
+            worldMatrix.mul(projectionMatrix);
+
             Vector4f parent_transform = parentBone.getLocalSpaceMatrix().transform(new Vector4f(parentBone.getPivotX()/16, parentBone.getPivotY()/16, parentBone.getPivotZ()/16, 1));
             Vector4f parent = new Vector4f(parent_transform.x(), parent_transform.y(), parent_transform.z(), 1).mul(worldMatrix);
 
@@ -101,7 +105,7 @@ public class HanekageManager {
                 }
 
 
-                parent = new Vector4f(parent).add(getOffset(parentBone,geoBone,matrix4f).mul(-1));
+                parent = new Vector4f(parent).add(getOffset(parentBone,geoBone,worldMatrix).mul(-1));
                 parentBone = geoBone;
             }
             //这里应用完track父级的所有变换
@@ -121,8 +125,10 @@ public class HanekageManager {
                 return;
             }
 
-            Vector4f start = new Vector4f(parent).add(getOffset(parentBone,trackStartBone,matrix4f));
-            Vector4f end = new Vector4f(parent).add(getOffset(parentBone,trackEndBone,matrix4f).mul(-1));
+            Vector4f start = new Vector4f(parent).add(getOffset(parentBone,trackStartBone,worldMatrix));
+            Vector4f end = new Vector4f(parent).add(getOffset(parentBone,trackEndBone,worldMatrix)
+                    .mul(-1));
+
 
             if(SwordTrailConfig.hasTrailTexture(parentBone.getName())){
                 pushTexturePoint(parentBone.getName(), uuid, start, end);
@@ -131,8 +137,6 @@ public class HanekageManager {
             }
 
         });
-
-
     }
 
     private static Vector4f getOffset(GeoBone parent,GeoBone child,Matrix4f matrix4f){
@@ -143,16 +147,12 @@ public class HanekageManager {
                 .rotateX(parent.getRotX());
 
         Vector3f translate = new Vector3f((parent.getPivotX()-child.getPivotX())/16, (parent.getPivotY()-child.getPivotY())/16, (parent.getPivotZ()-child.getPivotZ())/16);
-
         // 将平移向量旋转
         rotation.transform(translate);
-
         Vector4f vector4f = new Vector4f(translate, 0.0f);
-//        vector4f = vector4f.rotate(rotation);
         vector4f.mul(parent.getScaleX(), parent.getScaleY(), parent.getScaleZ(), 1.0f); // 应用缩放
         vector4f.mul(worldMatrix); // 应用世界矩阵
         return vector4f;
-
     }
 
     private static void pushTexturePoint(String bone_name, UUID uuid, Vector4f start, Vector4f end) {

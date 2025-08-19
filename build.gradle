@@ -3,6 +3,7 @@ plugins {
     id 'maven-publish'
     id 'idea'
     id 'net.neoforged.moddev' version '2.0.99'
+    id 'org.jreleaser' version '1.17.0'
 }
 
 version = mod_version
@@ -115,7 +116,7 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
 
-    implementation "software.bernie.geckolib:geckolib-neoforge-${minecraft_version}:${geckolib_version}"
+    compileOnly "software.bernie.geckolib:geckolib-neoforge-${minecraft_version}:${geckolib_version}"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
@@ -144,16 +145,61 @@ sourceSets.main.resources.srcDir generateModMetadata
 // To avoid having to run "generateModMetadata" manually, make it run on every project reload
 neoForge.ideSyncTask generateModMetadata
 
+
 // Example configuration to allow publishing using the maven-publish plugin
 publishing {
     publications {
-        register('mavenJava', MavenPublication) {
+        maven(MavenPublication) {
+            groupId = mod_group_id
+            artifactId = mod_id
+
             from components.java
+
+            pom {
+                name = mod_id
+                description = mod_description
+                url = "https://${github_link}"
+                inceptionYear = '2025'
+                licenses {
+                    license {
+                        name = mod_license
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'houraisan_kaguya'
+                        name = 'Houraisan Kaguya'
+                    }
+                }
+                scm {
+                    connection = "scm:git:https://${github_link}.git"
+                    developerConnection = "scm:git:ssh://${github_link}.git"
+                    url = "http://${github_link}"
+                }
+            }
         }
     }
     repositories {
         maven {
-            url "file://${project.projectDir}/repo"
+            url = layout.buildDirectory.dir('staging-deploy')
+        }
+    }
+}
+
+jreleaser {
+    signing {
+        active = 'ALWAYS'
+        armored = true
+    }
+    deploy {
+        maven {
+            mavenCentral {
+                sonatype {
+                    active = 'ALWAYS'
+                    url = 'https://central.sonatype.com/api/v1/publisher'
+                    stagingRepository('build/staging-deploy')
+                }
+            }
         }
     }
 }

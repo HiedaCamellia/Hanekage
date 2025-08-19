@@ -88,6 +88,8 @@ public class HanekageManager {
 
     public static void pushHanekagePath(String name, BakedGeoModel model, Matrix4f matrix4f, UUID uuid) {
         getCache(name).tracks().forEach(modelPath -> {
+            if(!SwordTrailConfig.getAutoPush(modelPath.last()))return;
+
             GeoBone parentBone = model.getBone(modelPath.first()).get();
             Matrix4f worldMatrix = new Matrix4f(matrix4f).mul(parentBone.getModelSpaceMatrix());
 
@@ -153,7 +155,7 @@ public class HanekageManager {
         return vector4f;
     }
 
-    private static void pushTexturePoint(String bone_name, UUID uuid, Vector4f start, Vector4f end) {
+    public static void pushTexturePoint(String bone_name, UUID uuid, Vector4f start, Vector4f end) {
         if (!TEXTURE_PATH_CACHE.containsKey(bone_name)) {
             TEXTURE_PATH_CACHE.put(bone_name, new HashMap<>());
         }
@@ -166,7 +168,7 @@ public class HanekageManager {
         TEXTURE_PATH_CACHE.get(bone_name).get(uuid).pushPoint(new Vector3f(start.x(), start.y(), start.z())
                 , new Vector3f(end.x(), end.y(), end.z()));
     }
-    private static void pushPoint(String bone_name, UUID uuid, Vector4f start, Vector4f end) {
+    public static void pushPoint(String bone_name, UUID uuid, Vector4f start, Vector4f end) {
         if (!PATH_CACHE.containsKey(bone_name)) {
             PATH_CACHE.put(bone_name, new HashMap<>());
         }
@@ -196,13 +198,6 @@ public class HanekageManager {
         PATH_CACHE.forEach((bone_name, path) ->
                 path.forEach((uuid, hanekagePath) ->
                         hanekagePath.popPoint()));
-        for (String bone_name : PATH_CACHE.keySet()) {
-            for (UUID uuid : PATH_CACHE.get(bone_name).keySet()) {
-                if(PATH_CACHE.get(bone_name).get(uuid).shouldRemove()){
-                    PATH_CACHE.get(bone_name).remove(uuid);
-                }
-            }
-        }
     }
 
 }

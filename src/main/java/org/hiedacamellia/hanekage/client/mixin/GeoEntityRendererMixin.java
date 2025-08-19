@@ -4,6 +4,7 @@ package org.hiedacamellia.hanekage.client.mixin;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.entity.Entity;
 import org.hiedacamellia.hanekage.client.graphic.hanekage.HanekageManager;
 import org.hiedacamellia.hanekage.client.util.EntityUtil;

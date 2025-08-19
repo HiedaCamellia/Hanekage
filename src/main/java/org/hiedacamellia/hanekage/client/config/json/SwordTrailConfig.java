@@ -51,6 +51,11 @@ public class SwordTrailConfig {
         load();
     }
 
+    public static boolean getAutoPush(String bone_name) {
+        SwordTrail swordTrail = swordTrailMap.get(bone_name);
+        return swordTrail != null && swordTrail.autoPush(); // Default to true if not found
+    }
+
     public static int getTrailTime(String bone_name) {
         SwordTrail swordTrail = swordTrailMap.get(bone_name);
         return swordTrail != null ? swordTrail.trail_time() : defaultTrailTime;

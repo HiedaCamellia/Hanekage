@@ -10,7 +10,7 @@ public record SwordTrail(int trail_time, int color, ResourceLocation texture,Int
         int color = jsonObject.has("color")? jsonObject.get("color").getAsInt() : SwordTrailConfig.getDefaultTrailColor();
         ResourceLocation texture = jsonObject.has("texture")?ResourceLocation.tryParse(jsonObject.get("texture").getAsString()):null;
         Interpolation interpolation = jsonObject.has("interpolation")? Interpolation.load(jsonObject.get("interpolation").getAsJsonObject()):SwordTrailConfig.getDefaultInterpolation();
-        boolean autoPush = jsonObject.has("auto_push")? jsonObject.get("autoPush").getAsBoolean() : true;
+        boolean autoPush = jsonObject.has("auto_push")? jsonObject.get("auto_push").getAsBoolean() : true;
         return new SwordTrail(trail_time, color, texture, interpolation,autoPush);
     }
 
